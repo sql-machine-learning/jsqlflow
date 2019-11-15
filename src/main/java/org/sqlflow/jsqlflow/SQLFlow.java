@@ -13,9 +13,7 @@
  * limitations under the License.
  */
 
-package org.sqlflow.sqlflowclient.impl;
+package org.sqlflow.jsqlflow;
 
-import org.sqlflow.sqlflowclient.SQLFlow;
-
-public class SQLFlowImpl implements SQLFlow {
+public interface SQLFlow {
 }

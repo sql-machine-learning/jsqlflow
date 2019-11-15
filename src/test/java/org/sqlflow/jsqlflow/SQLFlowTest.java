@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package org.sqlflow.sqlflowclient;
+package org.sqlflow.jsqlflow;
 
 public class SQLFlowTest {
 }
