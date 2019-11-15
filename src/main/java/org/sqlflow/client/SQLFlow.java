@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package org.sqlflow.jsqlflow;
+package org.sqlflow.client;
 
 public interface SQLFlow {
 }
