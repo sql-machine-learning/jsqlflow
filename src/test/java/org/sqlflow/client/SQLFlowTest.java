@@ -15,5 +15,9 @@
 
 package org.sqlflow.client;
 
+import org.junit.Test;
+
 public class SQLFlowTest {
+  @Test
+  public void testDummy() {}
 }
