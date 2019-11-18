@@ -15,6 +15,11 @@
 
 package org.sqlflow.client.impl;
 
+import io.grpc.ManagedChannel;
 import org.sqlflow.client.SQLFlow;
+import proto.SQLFlowGrpc;
 
-public class SQLFlowImpl implements SQLFlow {}
+public class SQLFlowImpl implements SQLFlow {
+  private final ManagedChannel channel;
+  private final SQLFlowGrpc.SQLFlowBlockingStub blockingStub;
+}
