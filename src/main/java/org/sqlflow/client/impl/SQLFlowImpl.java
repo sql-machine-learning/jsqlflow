@@ -15,11 +15,23 @@
 
 package org.sqlflow.client.impl;
 
-import io.grpc.ManagedChannel;
+import java.net.ConnectException;
 import org.sqlflow.client.SQLFlow;
-import proto.SQLFlowGrpc;
+import proto.Sqlflow.JobStatus;
 
 public class SQLFlowImpl implements SQLFlow {
-  private final ManagedChannel channel;
-  private final SQLFlowGrpc.SQLFlowBlockingStub blockingStub;
+  // private final ManagedChannel channel;
+  // private final SQLFlowGrpc.SQLFlowBlockingStub blockingStub;
+
+  public void open(String serverUrl) throws ConnectException {}
+
+  public String submit(String sql) throws Exception {
+    return null;
+  }
+
+  public JobStatus fetch(String jobId) throws Exception {
+    return null;
+  }
+
+  public void close() throws Exception {}
 }
