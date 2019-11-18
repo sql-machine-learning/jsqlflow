@@ -15,5 +15,4 @@
 
 package org.sqlflow.client;
 
-public interface SQLFlow {
-}
+public interface SQLFlow {}

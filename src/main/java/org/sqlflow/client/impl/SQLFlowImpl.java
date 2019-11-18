@@ -17,5 +17,4 @@ package org.sqlflow.client.impl;
 
 import org.sqlflow.client.SQLFlow;
 
-public class SQLFlowImpl implements SQLFlow {
-}
+public class SQLFlowImpl implements SQLFlow {}
