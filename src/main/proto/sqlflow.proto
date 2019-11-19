@@ -1,0 +1,113 @@
+syntax = "proto3";
+
+import "google/protobuf/any.proto";
+
+package proto;
+
+service SQLFlow {
+    // Run executes a sql statement
+    //
+    // SQL statements like `SELECT ...`, `DESCRIBE ...` returns a rowset.
+    // The rowset might be big. In such cases, Query returns a stream
+    // of RunResponse
+    //
+    // SQL statements like `USE database`, `DELETE` returns only a success
+    // message.
+    //
+    // SQL statement like `SELECT ... TO TRAIN/PREDICT ...` returns a stream of
+    // messages which indicates the training/predicting progress
+    rpc Run (Request) returns (stream Response);
+
+    // Submit a SQLFlow Job which contains a SQL program to SQLFlow server.
+    //
+    // A SQL program contains one or more SQL statements.
+    // Each of these SQL statements can be a standard SQL like:
+    // `SELECT ... FROM ...;`, `DESCRIBE ...`,
+    // or an extended SQLFlow SQL like:
+    // `SELECT ... TO TRAIN/PREDICT/EXPLAIN ...`.
+    //
+    // Submit returns a Job message which contains the SQLFlow Job ID.
+    rpc Submit (Request) returns (Job);
+
+    // Fetch fetches the SQLFlow job status and logs in a polling manner.
+    rpc Fetch (Job) returns (JobStatus);
+}
+
+message Job {
+    string id = 1;
+}
+
+message JobStatus {
+    enum Code {
+        PENDING = 0;
+        RUNNING = 1;
+        SUCCEEDED = 2;
+        FAILED = 3;
+        UNKNOWN = 4;
+    }
+    Code code = 1;
+    // The message field indicates the job logs or error message.
+    string message = 2;
+}
+
+message Session {
+    string token = 1;
+    string db_conn_str = 2;
+    bool exit_on_submit = 3;
+    string user_id = 4;
+    // for loading CSV to hive
+    string hive_location = 5;
+    string hdfs_namenode_addr = 6;
+    string hdfs_user = 7;
+    string hdfs_pass = 8;
+}
+
+// SQL statements to run
+// e.g.
+//      1. `SELECT ...`
+//      2. `USE ...`, `DELETE ...`
+//      3. `SELECT ... TO TRAIN/PREDICT ...`
+message Request {
+    string sql = 1;		// The SQL statement to be executed.
+    Session session = 2;
+}
+
+message Response {
+    oneof response {
+        Head head = 1;
+        Row row = 2;
+        Message message = 3;
+        EndOfExecution eoe = 4;
+    }
+}
+
+// SQL statements like `SELECT ...`, `DESCRIBE ...` returns a Head
+// and a sequence of Rows
+message Head {
+    repeated string column_names = 1;
+}
+message Row {
+    // Null is a special marker used in Structured Query Language to indicate
+    // that a data value does not exist in the database.
+    // We encoded this marker as message Null, and it is one possible type of
+    // google.protobuf.Any in the field data
+    message Null {}
+    repeated google.protobuf.Any data = 1;
+}
+
+// SQL statements like `USE database`, `DELETE` returns only a success
+// message.
+//
+// SQL statement like `SELECT ... TO TRAIN/PREDICT ...` returns a stream of
+// messages which indicates the training/predicting progress
+message Message {
+  string message = 1;
+}
+
+// SQLFlow server may execute multiple SQL statements in one RPC call.
+// EndOfExecution message tells the client that execution of one SQL is
+// finished, the client should go to next loop to parse the result stream.
+message EndOfExecution {
+    string sql = 1;
+    int64 spent_time_seconds = 2;
+}

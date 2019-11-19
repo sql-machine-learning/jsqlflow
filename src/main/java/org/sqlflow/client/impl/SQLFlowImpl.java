@@ -15,6 +15,23 @@
 
 package org.sqlflow.client.impl;
 
+import java.net.ConnectException;
 import org.sqlflow.client.SQLFlow;
+import proto.Sqlflow.JobStatus;
 
-public class SQLFlowImpl implements SQLFlow {}
+public class SQLFlowImpl implements SQLFlow {
+  // private final ManagedChannel channel;
+  // private final SQLFlowGrpc.SQLFlowBlockingStub blockingStub;
+
+  public void open(String serverUrl) throws ConnectException {}
+
+  public String submit(String sql) throws Exception {
+    return null;
+  }
+
+  public JobStatus fetch(String jobId) throws Exception {
+    return null;
+  }
+
+  public void close() throws Exception {}
+}
