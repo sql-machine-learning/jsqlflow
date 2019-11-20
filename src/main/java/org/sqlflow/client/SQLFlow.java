@@ -15,19 +15,19 @@
 
 package org.sqlflow.client;
 
+import io.grpc.StatusRuntimeException;
 import java.net.ConnectException;
 import proto.Sqlflow.JobStatus;
 
 public interface SQLFlow {
   /**
-   * Open the connection(channel) to the SQLFlow server. The serverUrl argument always ends with a
-   * port.
+   * Open a channel to the SQLFlow server. The serverUrl argument always ends with a port.
    *
    * @param serverUrl an address the SQLFlow server exposed.
    *     <p>Example: "localhost:50051"
    * @throws ConnectException when encountering the bad network.
    */
-  void open(String serverUrl) throws ConnectException;
+  void init(String serverUrl);
 
   /**
    * Submit a task to SQLFlow server. This method return immediately.
@@ -36,9 +36,9 @@ public interface SQLFlow {
    *     <p>Example: "SELECT * FROM iris.test; SELECT * FROM iris.iris TO TRAIN DNNClassifier
    *     COLUMN..." *
    * @return return a job id for tracking.
-   * @throws Exception TODO(weiguo): more precise
+   * @throws StatusRuntimeException
    */
-  String submit(String sql) throws Exception;
+  String submit(String sql) throws StatusRuntimeException;
 
   /**
    * Fetch the job status by job id. The job id always returned by submit. By fetch(), we are able
@@ -46,14 +46,15 @@ public interface SQLFlow {
    *
    * @param jobId specific the job we are going to track
    * @return see @code proto.JobStatus.Code
-   * @throws Exception TODO(weiguo): more precise
+   * @throws StatusRuntimeException
    */
-  JobStatus fetch(String jobId) throws Exception;
+  JobStatus fetch(String jobId) throws StatusRuntimeException;
 
   /**
-   * Close the opened connection(channel) to SQLFlow server
+   * Close the opened channel to SQLFlow server. Waits for the channel to become terminated, giving
+   * up if the timeout is reached.
    *
-   * @throws Exception TODO(weiguo): more precise
+   * @throws InterruptedException thrown by awaitTermination
    */
-  void close() throws Exception;
+  void release() throws InterruptedException;
 }
