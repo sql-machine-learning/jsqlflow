@@ -16,7 +16,7 @@
 package org.sqlflow.client;
 
 import io.grpc.StatusRuntimeException;
-import java.net.ConnectException;
+import org.sqlflow.client.models.RequestHeader;
 import proto.Sqlflow.JobStatus;
 
 public interface SQLFlow {
@@ -25,20 +25,22 @@ public interface SQLFlow {
    *
    * @param serverUrl an address the SQLFlow server exposed.
    *     <p>Example: "localhost:50051"
-   * @throws ConnectException when encountering the bad network.
    */
   void init(String serverUrl);
 
   /**
    * Submit a task to SQLFlow server. This method return immediately.
    *
-   * @param sql: sql program. *
+   * @param header: specify datasource, user ...
+   * @param sql: sql program.
    *     <p>Example: "SELECT * FROM iris.test; SELECT * FROM iris.iris TO TRAIN DNNClassifier
    *     COLUMN..." *
    * @return return a job id for tracking.
+   * @throws IllegalArgumentException header or sql error
    * @throws StatusRuntimeException
    */
-  String submit(String sql) throws StatusRuntimeException;
+  String submit(RequestHeader header, String sql)
+      throws IllegalArgumentException, StatusRuntimeException;
 
   /**
    * Fetch the job status by job id. The job id always returned by submit. By fetch(), we are able
