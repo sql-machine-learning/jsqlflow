@@ -4,5 +4,11 @@ cache:
   directories:
     - $HOME/.m2
 
+env:
+  - JDK=oraclejdk8
+dist: trusty
+before_script:
+  - jdk_switcher use $JDK
+
 script:
   - mvn clean verify --batch-mode --errors --fail-at-end --show-version -DinstallAtEnd=true
