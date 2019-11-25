@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package org.sqlflow.client.models;
+package org.sqlflow.client.model;
 
 import lombok.Data;
 

@@ -16,7 +16,7 @@
 package org.sqlflow.client;
 
 import io.grpc.StatusRuntimeException;
-import org.sqlflow.client.models.RequestHeader;
+import org.sqlflow.client.model.RequestHeader;
 import proto.Sqlflow.JobStatus;
 
 public interface SQLFlow {
@@ -58,5 +58,5 @@ public interface SQLFlow {
    *
    * @throws InterruptedException thrown by awaitTermination
    */
-  void release() throws InterruptedException;
+  void shutdown() throws InterruptedException;
 }

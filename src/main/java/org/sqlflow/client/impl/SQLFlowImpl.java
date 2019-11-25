@@ -21,7 +21,7 @@ import io.grpc.StatusRuntimeException;
 import java.util.concurrent.TimeUnit;
 import org.apache.commons.lang3.StringUtils;
 import org.sqlflow.client.SQLFlow;
-import org.sqlflow.client.models.RequestHeader;
+import org.sqlflow.client.model.RequestHeader;
 import proto.SQLFlowGrpc;
 import proto.Sqlflow.Job;
 import proto.Sqlflow.JobStatus;
@@ -34,6 +34,11 @@ public class SQLFlowImpl implements SQLFlow {
 
   public void init(String serverUrl) {
     this.channel = ManagedChannelBuilder.forTarget(serverUrl).usePlaintext().build();
+    blockingStub = SQLFlowGrpc.newBlockingStub(channel);
+  }
+
+  public SQLFlowImpl(ManagedChannel channel) {
+    this.channel = channel;
     blockingStub = SQLFlowGrpc.newBlockingStub(channel);
   }
 
@@ -51,10 +56,10 @@ public class SQLFlowImpl implements SQLFlow {
             .setDbConnStr(header.getDataSource())
             .setUserId(header.getUserId())
             .setExitOnSubmit(header.isExitOnSubmit())
-            .setHiveLocation(header.getHiveLocation())
-            .setHdfsNamenodeAddr(header.getHdfsNameNode())
-            .setHdfsUser(header.getHdfsUser())
-            .setHdfsPass(header.getHdfsPassword())
+            .setHiveLocation(StringUtils.defaultString(header.getHiveLocation()))
+            .setHdfsNamenodeAddr(StringUtils.defaultString(header.getHdfsNameNode()))
+            .setHdfsUser(StringUtils.defaultString(header.getHdfsUser()))
+            .setHdfsPass(StringUtils.defaultString(header.getHdfsPassword()))
             .build();
     Request req = Request.newBuilder().setSession(session).setSql(sql).build();
     try {
@@ -76,7 +81,7 @@ public class SQLFlowImpl implements SQLFlow {
     }
   }
 
-  public void release() throws InterruptedException {
+  public void shutdown() throws InterruptedException {
     try {
       channel.shutdown().awaitTermination(5, TimeUnit.SECONDS);
     } catch (InterruptedException e) {
