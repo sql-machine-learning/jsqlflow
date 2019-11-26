@@ -34,7 +34,6 @@ import org.junit.runners.JUnit4;
 import org.mockito.ArgumentCaptor;
 import org.mockito.ArgumentMatchers;
 import org.sqlflow.client.impl.SQLFlowImpl;
-import org.sqlflow.client.model.RequestHeader;
 import proto.SQLFlowGrpc;
 import proto.Sqlflow.Job;
 import proto.Sqlflow.JobStatus;
@@ -96,10 +95,12 @@ public class SQLFlowTest {
     String sql = "SELECT * TO TRAIN DNNClassify WITH ... COLUMN ... INTO ..";
 
     ArgumentCaptor<Request> requestCaptor = ArgumentCaptor.forClass(Request.class);
-    RequestHeader header = new RequestHeader();
-    header.setUserId(userId);
-    header.setDataSource("mysql://root@root@127.0.0.1:3306/iris");
-    String jobId = client.submit(header, sql);
+    Session session =
+        Session.newBuilder()
+            .setUserId(userId)
+            .setDbConnStr("mysql://root@root@127.0.0.1:3306/iris")
+            .build();
+    String jobId = client.submit(session, sql);
     assertEquals(mockJobId(userId, sql), jobId);
     verify(grpcService)
         .submit(requestCaptor.capture(), ArgumentMatchers.<StreamObserver<Job>>any());
@@ -125,6 +126,6 @@ public class SQLFlowTest {
 
   @After
   public void tearDown() throws Exception {
-    client.shutdown();
+    client.release();
   }
 }

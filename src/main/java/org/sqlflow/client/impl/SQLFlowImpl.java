@@ -15,13 +15,13 @@
 
 package org.sqlflow.client.impl;
 
+import com.google.common.annotations.VisibleForTesting;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.StatusRuntimeException;
 import java.util.concurrent.TimeUnit;
 import org.apache.commons.lang3.StringUtils;
 import org.sqlflow.client.SQLFlow;
-import org.sqlflow.client.model.RequestHeader;
 import proto.SQLFlowGrpc;
 import proto.Sqlflow.Job;
 import proto.Sqlflow.JobStatus;
@@ -37,30 +37,21 @@ public class SQLFlowImpl implements SQLFlow {
     blockingStub = SQLFlowGrpc.newBlockingStub(channel);
   }
 
+  @VisibleForTesting
   public SQLFlowImpl(ManagedChannel channel) {
     this.channel = channel;
     blockingStub = SQLFlowGrpc.newBlockingStub(channel);
   }
 
-  public String submit(RequestHeader header, String sql)
+  public String submit(Session session, String sql)
       throws IllegalArgumentException, StatusRuntimeException {
-    if (header == null || StringUtils.isAnyBlank(header.getDataSource(), header.getUserId())) {
+    if (session == null || StringUtils.isAnyBlank(session.getDbConnStr(), session.getUserId())) {
       throw new IllegalArgumentException("data source and userId are not allowed to be empty");
     }
     if (StringUtils.isBlank(sql)) {
       throw new IllegalArgumentException("sql is empty");
     }
 
-    Session session =
-        Session.newBuilder()
-            .setDbConnStr(header.getDataSource())
-            .setUserId(header.getUserId())
-            .setExitOnSubmit(header.isExitOnSubmit())
-            .setHiveLocation(StringUtils.defaultString(header.getHiveLocation()))
-            .setHdfsNamenodeAddr(StringUtils.defaultString(header.getHdfsNameNode()))
-            .setHdfsUser(StringUtils.defaultString(header.getHdfsUser()))
-            .setHdfsPass(StringUtils.defaultString(header.getHdfsPassword()))
-            .build();
     Request req = Request.newBuilder().setSession(session).setSql(sql).build();
     try {
       Job job = blockingStub.submit(req);
@@ -81,7 +72,7 @@ public class SQLFlowImpl implements SQLFlow {
     }
   }
 
-  public void shutdown() throws InterruptedException {
+  public void release() throws InterruptedException {
     try {
       channel.shutdown().awaitTermination(5, TimeUnit.SECONDS);
     } catch (InterruptedException e) {
