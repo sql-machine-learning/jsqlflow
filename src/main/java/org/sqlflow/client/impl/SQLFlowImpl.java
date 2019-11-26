@@ -15,23 +15,78 @@
 
 package org.sqlflow.client.impl;
 
-import java.net.ConnectException;
+import io.grpc.ManagedChannel;
+import io.grpc.ManagedChannelBuilder;
+import io.grpc.StatusRuntimeException;
+import java.util.concurrent.TimeUnit;
+import org.apache.commons.lang3.StringUtils;
 import org.sqlflow.client.SQLFlow;
+import org.sqlflow.client.model.RequestHeader;
+import proto.SQLFlowGrpc;
+import proto.Sqlflow.Job;
 import proto.Sqlflow.JobStatus;
+import proto.Sqlflow.Request;
+import proto.Sqlflow.Session;
 
 public class SQLFlowImpl implements SQLFlow {
-  // private final ManagedChannel channel;
-  // private final SQLFlowGrpc.SQLFlowBlockingStub blockingStub;
+  private ManagedChannel channel;
+  private SQLFlowGrpc.SQLFlowBlockingStub blockingStub;
 
-  public void open(String serverUrl) throws ConnectException {}
-
-  public String submit(String sql) throws Exception {
-    return null;
+  public void init(String serverUrl) {
+    this.channel = ManagedChannelBuilder.forTarget(serverUrl).usePlaintext().build();
+    blockingStub = SQLFlowGrpc.newBlockingStub(channel);
   }
 
-  public JobStatus fetch(String jobId) throws Exception {
-    return null;
+  public SQLFlowImpl(ManagedChannel channel) {
+    this.channel = channel;
+    blockingStub = SQLFlowGrpc.newBlockingStub(channel);
   }
 
-  public void close() throws Exception {}
+  public String submit(RequestHeader header, String sql)
+      throws IllegalArgumentException, StatusRuntimeException {
+    if (header == null || StringUtils.isAnyBlank(header.getDataSource(), header.getUserId())) {
+      throw new IllegalArgumentException("data source and userId are not allowed to be empty");
+    }
+    if (StringUtils.isBlank(sql)) {
+      throw new IllegalArgumentException("sql is empty");
+    }
+
+    Session session =
+        Session.newBuilder()
+            .setDbConnStr(header.getDataSource())
+            .setUserId(header.getUserId())
+            .setExitOnSubmit(header.isExitOnSubmit())
+            .setHiveLocation(StringUtils.defaultString(header.getHiveLocation()))
+            .setHdfsNamenodeAddr(StringUtils.defaultString(header.getHdfsNameNode()))
+            .setHdfsUser(StringUtils.defaultString(header.getHdfsUser()))
+            .setHdfsPass(StringUtils.defaultString(header.getHdfsPassword()))
+            .build();
+    Request req = Request.newBuilder().setSession(session).setSql(sql).build();
+    try {
+      Job job = blockingStub.submit(req);
+      return job.getId();
+    } catch (StatusRuntimeException e) {
+      // TODO(weiguo) logger.error
+      throw e;
+    }
+  }
+
+  public JobStatus fetch(String jobId) throws StatusRuntimeException {
+    Job req = Job.newBuilder().setId(jobId).build();
+    try {
+      return blockingStub.fetch(req);
+    } catch (StatusRuntimeException e) {
+      // TODO(weiguo) logger.error
+      throw e;
+    }
+  }
+
+  public void shutdown() throws InterruptedException {
+    try {
+      channel.shutdown().awaitTermination(5, TimeUnit.SECONDS);
+    } catch (InterruptedException e) {
+      // TODO(weiguo) logger.error
+      throw e;
+    }
+  }
 }
