@@ -125,6 +125,6 @@ public class SQLFlowTest {
 
   @After
   public void tearDown() throws Exception {
-    client.shutdown();
+    client.release();
   }
 }

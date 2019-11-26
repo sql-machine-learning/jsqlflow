@@ -81,7 +81,7 @@ public class SQLFlowImpl implements SQLFlow {
     }
   }
 
-  public void shutdown() throws InterruptedException {
+  public void release() throws InterruptedException {
     try {
       channel.shutdown().awaitTermination(5, TimeUnit.SECONDS);
     } catch (InterruptedException e) {

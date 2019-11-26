@@ -58,5 +58,5 @@ public interface SQLFlow {
    *
    * @throws InterruptedException thrown by awaitTermination
    */
-  void shutdown() throws InterruptedException;
+  void release() throws InterruptedException;
 }
