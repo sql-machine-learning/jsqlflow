@@ -27,6 +27,7 @@
       <id>gpg</id>
       <properties>
         <gpg.executable>gpg</gpg.executable>
+        <gpg.keyname>${env.GPG_KEYNAME}</gpg.keyname>
         <gpg.passphrase>${env.GPG_PSWD}</gpg.passphrase>
       </properties>
     </profile>
