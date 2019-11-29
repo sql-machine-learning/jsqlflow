@@ -9,8 +9,10 @@ dist: trusty
 before_script:
   - jdk_switcher use $JDK
 
-install: mvn clean verify -Dgpg.skip
+# install: mvn clean verify -Dgpg.skip
+install: cp .travis.settings.xml $HOME/.m2/settings.xml && mvn deploy -P gpg
 
+# TODO(weiguo) not tested yet
 deploy:
   provider: script
   script: "cp .travis.settings.xml $HOME/.m2/settings.xml && mvn deploy -P gpg"
