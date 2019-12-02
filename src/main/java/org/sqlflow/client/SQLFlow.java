@@ -32,12 +32,7 @@ public interface SQLFlow {
    * Submit a task to SQLFlow server. This method return immediately.
    *
    * @param session: specify dbConnStr(datasource), user Id ...
-   *     <p>datasource == maxcomputer
-   *     maxcompute://{accesskey_id}:{accesskey_secret}@{endpoint}?curr_project={curr_project}&scheme={scheme}
-   *     <p>datasource == mysql
-   *     mysql://{username}:{password}@tcp({address})/{dbname}[?param1=value1&...&paramN=valueN]
-   *     <p>datasource == hive
-   *     hive://user:password@ip:port/dbname[?auth=<auth_mechanism>&session.<cfg_key1>=<cfg_value1>...&session<cfg_keyN>=valueN]
+   *     mysql://root:root@tcp(localhost)/iris
    * @param sql: sql program.
    *     <p>Example: "SELECT * FROM iris.test; SELECT * FROM iris.iris TO TRAIN DNNClassifier
    *     COLUMN..." *

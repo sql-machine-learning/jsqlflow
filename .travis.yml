@@ -3,12 +3,18 @@ sudo: false
 cache:
   directories:
     - $HOME/.m2
-
 env:
   - JDK=oraclejdk8
 dist: trusty
 before_script:
   - jdk_switcher use $JDK
 
-script:
-  - mvn clean verify --batch-mode --errors --fail-at-end --show-version -DinstallAtEnd=true
+install: mvn clean verify -Dgpg.skip
+
+# TODO(weiguo) not tested yet
+deploy:
+  provider: script
+  script: "mvn --settings .travis/settings.xml deploy -P gpg"
+  skip_cleanup: true
+  on:
+    tags: true
