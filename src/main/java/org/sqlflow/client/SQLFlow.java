@@ -21,14 +21,6 @@ import proto.Sqlflow.Session;
 
 public interface SQLFlow {
   /**
-   * Open a channel to the SQLFlow server. The serverUrl argument always ends with a port.
-   *
-   * @param serverUrl an address the SQLFlow server exposed.
-   *     <p>Example: "localhost:50051"
-   */
-  void init(String serverUrl);
-
-  /**
    * Submit a task to SQLFlow server. This method return immediately.
    *
    * @param session: specify dbConnStr(datasource), user Id ...

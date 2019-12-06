@@ -86,7 +86,7 @@ public class SQLFlowTest {
 
     ManagedChannel channel =
         grpcCleanup.register(InProcessChannelBuilder.forName(serverName).directExecutor().build());
-    client = new SQLFlowImpl(channel);
+    client = SQLFlowImpl.Builder.newInstance().withChannel(channel).build();
   }
 
   @Test
@@ -98,7 +98,7 @@ public class SQLFlowTest {
     Session session =
         Session.newBuilder()
             .setUserId(userId)
-            .setDbConnStr("mysql://root@root@127.0.0.1:3306/iris")
+            .setDbConnStr("mysql://root:root@127.0.0.1:3306/iris")
             .build();
     String jobId = client.submit(session, sql);
     assertEquals(mockJobId(userId, sql), jobId);

@@ -15,7 +15,6 @@
 
 package org.sqlflow.client.impl;
 
-import com.google.common.annotations.VisibleForTesting;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.StatusRuntimeException;
@@ -32,14 +31,8 @@ public class SQLFlowImpl implements SQLFlow {
   private ManagedChannel channel;
   private SQLFlowGrpc.SQLFlowBlockingStub blockingStub;
 
-  public void init(String serverUrl) {
-    this.channel = ManagedChannelBuilder.forTarget(serverUrl).usePlaintext().build();
-    blockingStub = SQLFlowGrpc.newBlockingStub(channel);
-  }
-
-  @VisibleForTesting
-  public SQLFlowImpl(ManagedChannel channel) {
-    this.channel = channel;
+  private SQLFlowImpl(Builder builder) {
+    this.channel = builder.channel;
     blockingStub = SQLFlowGrpc.newBlockingStub(channel);
   }
 
@@ -78,6 +71,33 @@ public class SQLFlowImpl implements SQLFlow {
     } catch (InterruptedException e) {
       // TODO(weiguo) logger.error
       throw e;
+    }
+  }
+
+  public static class Builder {
+    private ManagedChannel channel;
+
+    public static Builder newInstance() {
+      return new Builder();
+    }
+
+    public Builder withChannel(ManagedChannel channel) {
+      this.channel = channel;
+      return this;
+    }
+
+    /**
+     * Open a channel to the SQLFlow server. The serverUrl argument always ends with a port.
+     *
+     * @param serverUrl an address the SQLFlow server exposed.
+     *     <p>Example: "localhost:50051"
+     */
+    public Builder forTarget(String serverUrl) {
+      return withChannel(ManagedChannelBuilder.forTarget(serverUrl).usePlaintext().build());
+    }
+
+    public SQLFlow build() {
+      return new SQLFlowImpl(this);
     }
   }
 }
