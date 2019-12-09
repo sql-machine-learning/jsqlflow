@@ -7,7 +7,7 @@
     <groupId>org.sqlflow</groupId>
     <artifactId>jsqlflow</artifactId>
     <packaging>jar</packaging>
-    <version>0.0.1</version>
+    <version>0.0.2</version>
     <name>jsqlflow</name>
     <description>SQLFlow client</description>
     <url>https://github.com/sql-machine-learning/jsqlflow</url>
