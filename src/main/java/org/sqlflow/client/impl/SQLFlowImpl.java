@@ -18,13 +18,21 @@ package org.sqlflow.client.impl;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.StatusRuntimeException;
+
+import java.nio.file.DirectoryIteratorException;
+import java.util.Iterator;
+import java.util.NoSuchElementException;
 import java.util.concurrent.TimeUnit;
+
+import javafx.print.PrinterJob.JobStatus;
 import org.apache.commons.lang3.StringUtils;
 import org.sqlflow.client.SQLFlow;
 import proto.SQLFlowGrpc;
+import proto.Sqlflow.FetchRequest;
+import proto.Sqlflow.FetchResponse;
 import proto.Sqlflow.Job;
-import proto.Sqlflow.JobStatus;
 import proto.Sqlflow.Request;
+import proto.Sqlflow.Response;
 import proto.Sqlflow.Session;
 
 public class SQLFlowImpl implements SQLFlow {
@@ -37,7 +45,7 @@ public class SQLFlowImpl implements SQLFlow {
   }
 
   public String submit(Session session, String sql)
-      throws IllegalArgumentException, StatusRuntimeException {
+      throws IllegalArgumentException, StatusRuntimeException, NoSuchElementException {
     if (session == null || StringUtils.isAnyBlank(session.getDbConnStr(), session.getUserId())) {
       throw new IllegalArgumentException("data source and userId are not allowed to be empty");
     }
@@ -47,18 +55,26 @@ public class SQLFlowImpl implements SQLFlow {
 
     Request req = Request.newBuilder().setSession(session).setSql(sql).build();
     try {
-      Job job = blockingStub.submit(req);
-      return job.getId();
+      Iterator<Response> responses = blockingStub.run(req);
+      if (!responses.hasNext()) {
+        throw new NoSuchElementException("bad response");
+      }
+      Response response = responses.next();
+      return response.getJob().getId();
     } catch (StatusRuntimeException e) {
       // TODO(weiguo) logger.error
       throw e;
     }
   }
 
-  public JobStatus fetch(String jobId) throws StatusRuntimeException {
-    Job req = Job.newBuilder().setId(jobId).build();
+  public FetchResponse fetch(String jobId) throws StatusRuntimeException {
+    Job job = Job.newBuilder().setId(jobId).build();
+    FetchRequest req = FetchRequest.newBuilder().setJob(job).build();
     try {
-      return blockingStub.fetch(req);
+      FetchResponse response = blockingStub.fetch(req);
+      // response.getLogs() 内容+Log 暂时统一在 getLogs 中
+      // 实现成循环方式更优
+      FetchRequest updatedRequest = response.getUpdatedFetchSince();
     } catch (StatusRuntimeException e) {
       // TODO(weiguo) logger.error
       throw e;

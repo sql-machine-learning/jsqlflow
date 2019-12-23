@@ -15,8 +15,10 @@
 
 package org.sqlflow.client;
 
+import java.util.NoSuchElementException;
+
 import io.grpc.StatusRuntimeException;
-import proto.Sqlflow.JobStatus;
+import proto.Sqlflow.FetchResponse;
 import proto.Sqlflow.Session;
 
 public interface SQLFlow {
@@ -30,20 +32,21 @@ public interface SQLFlow {
    *     COLUMN..." *
    * @return return a job id for tracking.
    * @throws IllegalArgumentException header or sql error
-   * @throws StatusRuntimeException
+   * @throws StatusRuntimeException run time exception
+   * @throws NoSuchElementException server return empty response
    */
   String submit(Session session, String sql)
-      throws IllegalArgumentException, StatusRuntimeException;
+      throws IllegalArgumentException, StatusRuntimeException, NoSuchElementException;
 
   /**
    * Fetch the job status by job id. The job id always returned by submit. By fetch(), we are able
    * to tracking the job status
    *
    * @param jobId specific the job we are going to track
-   * @return see @code proto.JobStatus.Code
-   * @throws StatusRuntimeException
+   * @return
+   * @throws StatusRuntimeException run time exception
    */
-  JobStatus fetch(String jobId) throws StatusRuntimeException;
+  FetchResponse fetch(String jobId) throws StatusRuntimeException;
 
   /**
    * Close the opened channel to SQLFlow server. Waits for the channel to become terminated, giving
