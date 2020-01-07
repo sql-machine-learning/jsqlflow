@@ -15,41 +15,159 @@
 
 package org.sqlflow.client;
 
+import java.util.Iterator;
+import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.concurrent.TimeUnit;
+
+import com.google.protobuf.Any;
+import io.grpc.ManagedChannel;
+import io.grpc.ManagedChannelBuilder;
 import io.grpc.StatusRuntimeException;
-import proto.Sqlflow.JobStatus;
+import org.apache.commons.lang3.StringUtils;
+import org.sqlflow.client.utils.HTMLDetector;
+import proto.SQLFlowGrpc;
+import proto.Sqlflow.FetchRequest;
+import proto.Sqlflow.FetchResponse;
+import proto.Sqlflow.FetchResponse.Logs;
+import proto.Sqlflow.Job;
+import proto.Sqlflow.Request;
+import proto.Sqlflow.Response;
 import proto.Sqlflow.Session;
 
-public interface SQLFlow {
-  /**
-   * Submit a task to SQLFlow server. This method return immediately.
-   *
-   * @param session: specify dbConnStr(datasource), user Id ...
-   *     mysql://root:root@tcp(localhost)/iris
-   * @param sql: sql program.
-   *     <p>Example: "SELECT * FROM iris.test; SELECT * FROM iris.iris TO TRAIN DNNClassifier
-   *     COLUMN..." *
-   * @return return a job id for tracking.
-   * @throws IllegalArgumentException header or sql error
-   * @throws StatusRuntimeException
-   */
-  String submit(Session session, String sql)
-      throws IllegalArgumentException, StatusRuntimeException;
+public class SQLFlow {
+  private Builder builder;
 
-  /**
-   * Fetch the job status by job id. The job id always returned by submit. By fetch(), we are able
-   * to tracking the job status
-   *
-   * @param jobId specific the job we are going to track
-   * @return see @code proto.JobStatus.Code
-   * @throws StatusRuntimeException
-   */
-  JobStatus fetch(String jobId) throws StatusRuntimeException;
+  private SQLFlowGrpc.SQLFlowBlockingStub blockingStub;
+  // TODO(weiguo): It looks we need the futureStub to handle a large data set.
+  // private SQLFlowGrpc.SQLFlowFutureStub futureStub;
 
-  /**
-   * Close the opened channel to SQLFlow server. Waits for the channel to become terminated, giving
-   * up if the timeout is reached.
-   *
-   * @throws InterruptedException thrown by awaitTermination
-   */
-  void release() throws InterruptedException;
+  private SQLFlow(Builder builder) {
+    this.builder = builder;
+    blockingStub = SQLFlowGrpc.newBlockingStub(builder.channel);
+  }
+
+  public void run(String sql)
+      throws IllegalArgumentException, StatusRuntimeException, NoSuchElementException {
+    if (StringUtils.isBlank(sql)) {
+      throw new IllegalArgumentException("sql is empty");
+    }
+
+    Request req = Request.newBuilder().setSession(builder.session).setSql(sql).build();
+    try {
+      Iterator<Response> responses = blockingStub.run(req);
+      handleSQLFlowResponses(responses);
+    } catch (StatusRuntimeException e) {
+      // TODO(weiguo) logger.error
+      throw e;
+    }
+  }
+
+  public void release() throws InterruptedException {
+    builder.channel.shutdown().awaitTermination(5, TimeUnit.SECONDS);
+  }
+
+  private void handleSQLFlowResponses(Iterator<Response> responses) {
+    if (responses == null || !responses.hasNext()) {
+      throw new NoSuchElementException("bad response");
+    }
+    while (responses.hasNext()) {
+      Response response = responses.next();
+      if (response == null) {
+        break;
+      }
+      if (response.hasHead()) {
+        builder.handler.handleHeader(response.getHead().getColumnNamesList());
+      } else if (response.hasRow()) {
+        List<Any> rows = response.getRow().getDataList();
+        builder.handler.handleRows(rows);
+      } else if (response.hasMessage()) {
+        String msg = response.getMessage().getMessage();
+        if (HTMLDetector.validate(msg)) {
+          builder.handler.handleHTML(msg);
+        } else {
+          builder.handler.handleText(msg);
+        }
+      } else if (response.hasEoe()) {
+        builder.handler.handleEOE();
+        // assert(!responses.hasNext())
+      } else if (response.hasJob()) {
+        trackingJobStatus(response.getJob().getId());
+        // assert(!responses.hasNext())
+      } else {
+        break;
+      }
+    }
+  }
+
+  private void trackingJobStatus(String jobId) {
+    Job job = Job.newBuilder().setId(jobId).build();
+    FetchRequest req = FetchRequest.newBuilder().setJob(job).build();
+    while (true) {
+      FetchResponse response = blockingStub.fetch(req);
+      Logs logs = response.getLogs();
+      logs.getContentList().forEach(this.builder.handler::handleText);
+      if (response.getEof()) {
+        this.builder.handler.handleEOE();
+        break;
+      }
+      req = response.getUpdatedFetchSince();
+
+      try {
+        Thread.sleep(builder.intervalFetching);
+      } catch (InterruptedException e) {
+        break;
+      }
+    }
+  }
+
+  public static class Builder {
+    private ManagedChannel channel;
+    private MessageHandler handler;
+    private Session session;
+    private long intervalFetching = 2000L; // millis
+
+    public static Builder newInstance() {
+      return new Builder();
+    }
+
+    public Builder withChannel(ManagedChannel channel) {
+      this.channel = channel;
+      return this;
+    }
+
+    public Builder withMessageHandler(MessageHandler handler) {
+      this.handler = handler;
+      return this;
+    }
+
+    public Builder withIntervalFetching(long mills) {
+      if (mills > 0) {
+        this.intervalFetching = mills;
+      }
+      return this;
+    }
+
+    public Builder withSession(Session session) {
+      if (session == null || StringUtils.isAnyBlank(session.getDbConnStr(), session.getUserId())) {
+        throw new IllegalArgumentException("data source and userId are not allowed to be empty");
+      }
+      this.session = session;
+      return this;
+    }
+
+    /**
+     * Open a channel to the SQLFlow server. The serverUrl argument always ends with a port.
+     *
+     * @param serverUrl an address the SQLFlow server exposed.
+     *     <p>Example: "localhost:50051"
+     */
+    public Builder forTarget(String serverUrl) {
+      return withChannel(ManagedChannelBuilder.forTarget(serverUrl).usePlaintext().build());
+    }
+
+    public SQLFlow build() {
+      return new SQLFlow(this);
+    }
+  }
 }
