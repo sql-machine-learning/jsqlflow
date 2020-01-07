@@ -15,17 +15,12 @@
 
 package org.sqlflow.client;
 
-import static org.junit.Assert.assertEquals;
-import static org.mockito.AdditionalAnswers.delegatesTo;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-
 import io.grpc.ManagedChannel;
 import io.grpc.inprocess.InProcessChannelBuilder;
 import io.grpc.inprocess.InProcessServerBuilder;
 import io.grpc.stub.StreamObserver;
 import io.grpc.testing.GrpcCleanupRule;
-import org.junit.After;
+import org.apache.commons.lang3.StringUtils;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -33,17 +28,25 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 import org.mockito.ArgumentCaptor;
 import org.mockito.ArgumentMatchers;
-import org.sqlflow.client.impl.SQLFlowImpl;
 import proto.SQLFlowGrpc;
+import proto.Sqlflow.FetchRequest;
+import proto.Sqlflow.FetchResponse;
+import proto.Sqlflow.FetchResponse.Logs;
+import proto.Sqlflow.Head;
 import proto.Sqlflow.Job;
-import proto.Sqlflow.JobStatus;
-import proto.Sqlflow.JobStatus.Code;
+import proto.Sqlflow.Message;
 import proto.Sqlflow.Request;
+import proto.Sqlflow.Response;
 import proto.Sqlflow.Session;
+
+import static org.mockito.AdditionalAnswers.delegatesTo;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 
 @RunWith(JUnit4.class)
 public class SQLFlowTest {
-  private SQLFlow client;
+  private SQLFlowStub client;
+  private static final String USER = "314159";
   /**
    * This rule manages automatic graceful shutdown for the registered servers and channels at the
    * end of test.
@@ -55,22 +58,60 @@ public class SQLFlowTest {
           SQLFlowGrpc.SQLFlowImplBase.class,
           delegatesTo(
               new SQLFlowGrpc.SQLFlowImplBase() {
-                public void submit(Request request, StreamObserver<Job> response) {
-                  Session session = request.getSession();
+                public void run(Request req, StreamObserver<Response> rsp) {
+                  Session session = req.getSession();
                   String userId = session.getUserId();
-                  response.onNext(
-                      Job.newBuilder().setId(mockJobId(userId, request.getSql())).build());
-                  response.onCompleted();
+
+                  Message msg = Message.newBuilder().setMessage("hello " + userId).build();
+                  rsp.onNext(Response.newBuilder().setMessage(msg).build());
+
+                  Head header =
+                      Head.newBuilder().addColumnNames("name").addColumnNames("salary").build();
+                  rsp.onNext(Response.newBuilder().setHead(header).build());
+
+                  Job job = Job.newBuilder().setId(mockJobId(userId, req.getSql())).build();
+                  rsp.onNext(Response.newBuilder().setJob(job).build());
+                  rsp.onCompleted();
                 }
 
-                public void fetch(Job request, StreamObserver<JobStatus> response) {
-                  String jobId = request.getId();
-                  response.onNext(
-                      JobStatus.newBuilder()
-                          .setCodeValue(Code.PENDING_VALUE)
-                          .setMessage(mockMessage(jobId))
-                          .build());
-                  response.onCompleted();
+                public void fetch(FetchRequest req, StreamObserver<FetchResponse> rsp) {
+                  String jobId = req.getJob().getId();
+                  FetchRequest.Builder frb =
+                      FetchRequest.newBuilder().setJob(Job.newBuilder().setId(jobId).build());
+                  if (StringUtils.isEmpty(req.getStepId())) {
+                    Logs logs =
+                        Logs.newBuilder()
+                            .addContent("fetchLogs for job=[" + jobId + "]")
+                            .addContent("1st line")
+                            .addContent("2nd line")
+                            .addContent("no more logs")
+                            .build();
+                    rsp.onNext(
+                        FetchResponse.newBuilder()
+                            .setLogs(logs)
+                            .setUpdatedFetchSince(frb.setStepId("1").build())
+                            .build());
+                  } else if (req.getStepId().equalsIgnoreCase("1")) {
+                    rsp.onNext(
+                        FetchResponse.newBuilder()
+                            .setUpdatedFetchSince(frb.setStepId("2").build())
+                            .setEof(false)
+                            .build());
+                  } else if (req.getStepId().equalsIgnoreCase("2")) {
+                    Logs bye = Logs.newBuilder().addContent("bye").build();
+                    rsp.onNext(
+                        FetchResponse.newBuilder()
+                            .setLogs(bye)
+                            .setUpdatedFetchSince(frb.setStepId("3").build())
+                            .build());
+                  } else if (req.getStepId().equalsIgnoreCase("3")) {
+                    rsp.onNext(
+                        FetchResponse.newBuilder()
+                            .setEof(true)
+                            .setUpdatedFetchSince(frb.setStepId("-1").build())
+                            .build());
+                  }
+                  rsp.onCompleted();
                 }
               }));
 
@@ -86,46 +127,35 @@ public class SQLFlowTest {
 
     ManagedChannel channel =
         grpcCleanup.register(InProcessChannelBuilder.forName(serverName).directExecutor().build());
-    client = SQLFlowImpl.Builder.newInstance().withChannel(channel).build();
+
+    Session session =
+        Session.newBuilder()
+            .setUserId(USER)
+            .setDbConnStr("mysql://root:root@127.0.0.1:3306/iris")
+            .build();
+    client =
+        SQLFlowStub.Builder.newInstance()
+            .withSession(session)
+            .withIntervalFetching(500)
+            .withMessageHandler(new MessageHandler2020())
+            .withChannel(channel)
+            .build();
   }
 
   @Test
-  public void testSubmit() {
-    String userId = "314159";
+  public void testRun() {
     String sql = "SELECT * TO TRAIN DNNClassify WITH ... COLUMN ... INTO ..";
+    try {
+      client.run(sql);
+    } catch (Exception e) {
+      assert false;
+    }
 
     ArgumentCaptor<Request> requestCaptor = ArgumentCaptor.forClass(Request.class);
-    Session session =
-        Session.newBuilder()
-            .setUserId(userId)
-            .setDbConnStr("mysql://root:root@127.0.0.1:3306/iris")
-            .build();
-    String jobId = client.submit(session, sql);
-    assertEquals(mockJobId(userId, sql), jobId);
-    verify(grpcService)
-        .submit(requestCaptor.capture(), ArgumentMatchers.<StreamObserver<Job>>any());
-    assertEquals(sql, requestCaptor.getValue().getSql());
+    verify(grpcService).run(requestCaptor.capture(), ArgumentMatchers.any());
   }
 
   private String mockJobId(String userId, String sql) {
     return userId + "/" + sql;
-  }
-
-  private String mockMessage(String jobId) {
-    return "Hello " + jobId;
-  }
-
-  @Test
-  public void testFetch() {
-    String jobId = "this is a job id";
-    JobStatus jobStatus = client.fetch(jobId);
-
-    assertEquals(Code.PENDING_VALUE, jobStatus.getCode().getNumber());
-    assertEquals(mockMessage(jobId), jobStatus.getMessage());
-  }
-
-  @After
-  public void tearDown() throws Exception {
-    client.release();
   }
 }
