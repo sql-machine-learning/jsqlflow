@@ -41,12 +41,6 @@ public class MessageHandler2020 implements MessageHandler {
         });
   }
 
-  @Override
-  public void handleJob(List<String> logs) {
-    tag();
-    logs.forEach(System.out::println);
-  }
-
   private void tag() {
     String lastFunctionName = Thread.currentThread().getStackTrace()[2].getMethodName();
     System.out.println("[" + myName + "::" + lastFunctionName + "]");

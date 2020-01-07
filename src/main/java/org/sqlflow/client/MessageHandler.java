@@ -19,16 +19,22 @@ import java.util.List;
 
 /** Interface for application callback objects to receive logs and messages from SQLFlow server. */
 public interface MessageHandler {
-
+  /** Handle the html format response */
   void handleHTML(String html);
 
+  /** Handle the log */
   void handleText(String text);
 
+  /** EndOfExecution */
   void handleEOE();
 
+  /** Table header. */
   void handleHeader(List<String> columnNames);
 
+  /**
+   * Results
+   *
+   * <p>TODO(weiguo): shouldn't expose `Any`
+   */
   void handleRows(List<com.google.protobuf.Any> rows);
-
-  void handleJob(List<String> logs);
 }

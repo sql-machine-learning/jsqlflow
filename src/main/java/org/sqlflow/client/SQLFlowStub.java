@@ -21,7 +21,6 @@ import java.util.NoSuchElementException;
 import java.util.concurrent.TimeUnit;
 
 import com.google.protobuf.Any;
-import com.google.protobuf.Parser;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.StatusRuntimeException;
@@ -108,7 +107,7 @@ public class SQLFlowStub {
     while (true) {
       FetchResponse response = blockingStub.fetch(req);
       Logs logs = response.getLogs();
-      this.builder.handler.handleJob(logs.getContentList());
+      logs.getContentList().forEach(this.builder.handler::handleText);
       if (response.getEof()) {
         this.builder.handler.handleEOE();
         break;
