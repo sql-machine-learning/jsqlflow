@@ -45,7 +45,7 @@ import static org.mockito.Mockito.verify;
 
 @RunWith(JUnit4.class)
 public class SQLFlowTest {
-  private SQLFlowStub client;
+  private SQLFlow client;
   private static final String USER = "314159";
   /**
    * This rule manages automatic graceful shutdown for the registered servers and channels at the
@@ -134,19 +134,19 @@ public class SQLFlowTest {
             .setDbConnStr("mysql://root:root@127.0.0.1:3306/iris")
             .build();
     client =
-        SQLFlowStub.Builder.newInstance()
+        SQLFlow.Builder.newInstance()
             .withSession(session)
             .withIntervalFetching(500)
-            .withMessageHandler(new MessageHandler2020())
+            .withMessageHandler(new MessageHandlerExample())
             .withChannel(channel)
             .build();
   }
 
   @Test
   public void testRun() {
-    String sql = "SELECT * TO TRAIN DNNClassify WITH ... COLUMN ... INTO ..";
     try {
-      client.run(sql);
+      client.run("SELECT * TO TRAIN DNNClassify WITH ... COLUMN ... INTO ..");
+      client.release();
     } catch (Exception e) {
       assert false;
     }

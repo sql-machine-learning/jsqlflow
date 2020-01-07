@@ -2,7 +2,7 @@ package org.sqlflow.client;
 
 import java.util.List;
 
-public class MessageHandler2020 implements MessageHandler {
+public class MessageHandlerExample implements MessageHandler {
   private final String myName = this.getClass().getSimpleName();
 
   @Override

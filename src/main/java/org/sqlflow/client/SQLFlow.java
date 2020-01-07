@@ -35,21 +35,20 @@ import proto.Sqlflow.Request;
 import proto.Sqlflow.Response;
 import proto.Sqlflow.Session;
 
-public class SQLFlowStub {
+public class SQLFlow {
   private Builder builder;
 
   private SQLFlowGrpc.SQLFlowBlockingStub blockingStub;
   // TODO(weiguo): It looks we need the futureStub to handle a large data set.
   // private SQLFlowGrpc.SQLFlowFutureStub futureStub;
 
-  private SQLFlowStub(Builder builder) {
+  private SQLFlow(Builder builder) {
     this.builder = builder;
     blockingStub = SQLFlowGrpc.newBlockingStub(builder.channel);
   }
 
   public void run(String sql)
-      throws IllegalArgumentException, StatusRuntimeException, NoSuchElementException,
-          InterruptedException {
+      throws IllegalArgumentException, StatusRuntimeException, NoSuchElementException {
     if (StringUtils.isBlank(sql)) {
       throw new IllegalArgumentException("sql is empty");
     }
@@ -61,10 +60,11 @@ public class SQLFlowStub {
     } catch (StatusRuntimeException e) {
       // TODO(weiguo) logger.error
       throw e;
-    } finally {
-      // TODO(weiguo) shall well release the channel here?
-      builder.channel.shutdown().awaitTermination(5, TimeUnit.SECONDS);
     }
+  }
+
+  public void release() throws InterruptedException {
+    builder.channel.shutdown().awaitTermination(5, TimeUnit.SECONDS);
   }
 
   private void handleSQLFlowResponses(Iterator<Response> responses) {
@@ -80,7 +80,6 @@ public class SQLFlowStub {
         builder.handler.handleHeader(response.getHead().getColumnNamesList());
       } else if (response.hasRow()) {
         List<Any> rows = response.getRow().getDataList();
-        // TODO(weiguo): parse `com.google.protobuf.Any` typed rows.
         builder.handler.handleRows(rows);
       } else if (response.hasMessage()) {
         String msg = response.getMessage().getMessage();
@@ -167,8 +166,8 @@ public class SQLFlowStub {
       return withChannel(ManagedChannelBuilder.forTarget(serverUrl).usePlaintext().build());
     }
 
-    public SQLFlowStub build() {
-      return new SQLFlowStub(this);
+    public SQLFlow build() {
+      return new SQLFlow(this);
     }
   }
 }
