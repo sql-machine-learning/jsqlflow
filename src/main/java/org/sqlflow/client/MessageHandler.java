@@ -19,7 +19,7 @@ import java.util.List;
 
 /** Interface for application callback objects to receive logs and messages from SQLFlow server. */
 public interface MessageHandler {
-  
+
   void handleHTML(String html);
 
   void handleText(String text);

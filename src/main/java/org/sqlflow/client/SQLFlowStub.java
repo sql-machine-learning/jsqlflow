@@ -85,7 +85,7 @@ public class SQLFlowStub {
         builder.handler.handleRows(rows);
       } else if (response.hasMessage()) {
         String msg = response.getMessage().getMessage();
-        if (HTMLDetector.isHTML(msg)) {
+        if (HTMLDetector.validate(msg)) {
           builder.handler.handleHTML(msg);
         } else {
           builder.handler.handleText(msg);

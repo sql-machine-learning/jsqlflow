@@ -25,18 +25,18 @@ import org.apache.commons.lang3.StringUtils;
  * <p>Thanks https://ideone.com/HakdHo
  */
 public class HTMLDetector {
-  private static final String tagStart =
-      "\\<\\w+((\\s+\\w+(\\s*\\=\\s*(?:\".*?\"|'.*?'|[^'\"\\>\\s]+))?)+\\s*|\\s*)\\>";
-  private static final String tagEnd = "\\</\\w+\\>";
-  private static final String tagSelfClosing =
-      "\\<\\w+((\\s+\\w+(\\s*\\=\\s*(?:\".*?\"|'.*?'|[^'\"\\>\\s]+))?)+\\s*|\\s*)/\\>";
-  private static final String htmlEntity = "&[a-zA-Z][a-zA-Z0-9]+;";
-  private static final Pattern htmlPattern =
+  private static final String TAG_START =
+      "<\\w+((\\s+\\w+(\\s*=\\s*(?:\".*?\"|'.*?'|[^'\">\\s]+))?)+\\s*|\\s*)>";
+  private static final String TAG_END = "</\\w+>";
+  private static final String TAG_SELF_CLOSING =
+      "<\\w+((\\s+\\w+(\\s*=\\s*(?:\".*?\"|'.*?'|[^'\">\\s]+))?)+\\s*|\\s*)/>";
+  private static final String HTML_ENTITY = "&[a-zA-Z][a-zA-Z0-9]+;";
+  private static final Pattern HTML_PATTERN =
       Pattern.compile(
-          "(" + tagStart + ".*" + tagEnd + ")|(" + tagSelfClosing + ")|(" + htmlEntity + ")",
+          "(" + TAG_START + ".*" + TAG_END + ")|(" + TAG_SELF_CLOSING + ")|(" + HTML_ENTITY + ")",
           Pattern.DOTALL);
 
-  public static boolean isHTML(String s) {
-    return !StringUtils.isEmpty(s) && htmlPattern.matcher(s).find();
+  public static boolean validate(String str) {
+    return !StringUtils.isEmpty(str) && HTML_PATTERN.matcher(str).find();
   }
 }
