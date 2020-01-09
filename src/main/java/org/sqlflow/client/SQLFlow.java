@@ -149,8 +149,8 @@ public class SQLFlow {
     }
 
     public Builder withSession(Session session) {
-      if (session == null || StringUtils.isAnyBlank(session.getDbConnStr(), session.getUserId())) {
-        throw new IllegalArgumentException("data source and userId are not allowed to be empty");
+      if (session == null || StringUtils.isEmpty(session.getDbConnStr())) {
+        throw new IllegalArgumentException("empty DB connection string is not allowed");
       }
       this.session = session;
       return this;
