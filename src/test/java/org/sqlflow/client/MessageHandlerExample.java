@@ -18,11 +18,6 @@ public class MessageHandlerExample implements MessageHandler {
   }
 
   @Override
-  public void handleEOE() {
-    tag();
-  }
-
-  @Override
   public void handleHeader(List<String> columnNames) {
     tag();
     columnNames.forEach(

@@ -26,7 +26,7 @@ public interface MessageHandler {
   void handleText(String text);
 
   /** EndOfExecution */
-  void handleEOE();
+  default void handleEOE() {}
 
   /** Table header. */
   void handleHeader(List<String> columnNames);
