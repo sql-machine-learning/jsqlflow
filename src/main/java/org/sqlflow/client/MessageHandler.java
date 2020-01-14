@@ -36,5 +36,5 @@ public interface MessageHandler {
    *
    * <p>TODO(weiguo): shouldn't expose `Any`
    */
-  void handleRows(List<com.google.protobuf.Any> rows);
+  void handleRow(List<com.google.protobuf.Any> row);
 }

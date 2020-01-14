@@ -28,10 +28,10 @@ public class MessageHandlerExample implements MessageHandler {
   }
 
   @Override
-  public void handleRows(List<com.google.protobuf.Any> rows) {
+  public void handleRow(List<com.google.protobuf.Any> row) {
     tag();
-    rows.forEach(
-        row -> {
+    row.forEach(
+        cell -> {
           System.out.println("*");
         });
   }
