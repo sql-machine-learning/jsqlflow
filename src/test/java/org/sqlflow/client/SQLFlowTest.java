@@ -61,8 +61,9 @@ public class SQLFlowTest {
                 public void run(Request req, StreamObserver<Response> rsp) {
                   Session session = req.getSession();
                   String userId = session.getUserId();
+                  String submitter = session.getSubmitter();
 
-                  Message msg = Message.newBuilder().setMessage("hello " + userId).build();
+                  Message msg = Message.newBuilder().setMessage(submitter+": hello " + userId).build();
                   rsp.onNext(Response.newBuilder().setMessage(msg).build());
 
                   Head header =
@@ -131,6 +132,7 @@ public class SQLFlowTest {
     Session session =
         Session.newBuilder()
             .setUserId(USER)
+            .setSubmitter("pai")
             .setDbConnStr("mysql://root:root@127.0.0.1:3306/iris")
             .build();
     client =
