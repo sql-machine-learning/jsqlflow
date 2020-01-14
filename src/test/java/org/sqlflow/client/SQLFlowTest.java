@@ -63,7 +63,8 @@ public class SQLFlowTest {
                   String userId = session.getUserId();
                   String submitter = session.getSubmitter();
 
-                  Message msg = Message.newBuilder().setMessage(submitter+": hello " + userId).build();
+                  Message msg =
+                      Message.newBuilder().setMessage(submitter + ": hello " + userId).build();
                   rsp.onNext(Response.newBuilder().setMessage(msg).build());
 
                   Head header =

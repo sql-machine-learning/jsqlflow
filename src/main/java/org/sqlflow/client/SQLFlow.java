@@ -79,8 +79,8 @@ public class SQLFlow {
       if (response.hasHead()) {
         builder.handler.handleHeader(response.getHead().getColumnNamesList());
       } else if (response.hasRow()) {
-        List<Any> rows = response.getRow().getDataList();
-        builder.handler.handleRows(rows);
+        List<Any> row = response.getRow().getDataList();
+        builder.handler.handleRow(row);
       } else if (response.hasMessage()) {
         String msg = response.getMessage().getMessage();
         if (HTMLDetector.validate(msg)) {
