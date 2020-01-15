@@ -62,9 +62,14 @@ public class SQLFlowRemoteTest {
     }
     try {
       client.run("SELECT 1");
-      client.release();
     } catch (Exception e) {
       assert false;
+    } finally {
+      try {
+        client.release();
+      } catch (Exception e) {
+        System.err.println("exception while releasing SQLFlow client");
+      }
     }
   }
 }

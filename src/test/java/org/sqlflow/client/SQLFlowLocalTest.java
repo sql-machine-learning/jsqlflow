@@ -149,9 +149,14 @@ public class SQLFlowLocalTest {
   public void testRun() {
     try {
       client.run("SELECT * TO TRAIN DNNClassify WITH ... COLUMN ... INTO ..");
-      client.release();
     } catch (Exception e) {
       assert false;
+    } finally {
+      try {
+        client.release();
+      } catch (Exception e) {
+        System.err.println("exception while releasing SQLFlow client");
+      }
     }
 
     ArgumentCaptor<Request> requestCaptor = ArgumentCaptor.forClass(Request.class);
