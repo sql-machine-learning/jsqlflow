@@ -57,6 +57,7 @@ public class SQLFlowRemoteTest {
   @Test
   public void testRun() {
     if (client == null) {
+      System.out.println("skip remote test");
       return;
     }
     try {
