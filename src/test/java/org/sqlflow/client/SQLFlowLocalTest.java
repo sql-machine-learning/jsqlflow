@@ -154,7 +154,7 @@ public class SQLFlowLocalTest {
     } finally {
       try {
         client.release();
-      } catch (Exception e) {
+      } catch (InterruptedException e) {
         System.err.println("exception while releasing SQLFlow client");
       }
     }
