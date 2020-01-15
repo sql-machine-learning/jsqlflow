@@ -44,7 +44,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
 @RunWith(JUnit4.class)
-public class SQLFlowTest {
+public class SQLFlowLocalTest {
   private SQLFlow client;
   private static final String USER = "314159";
   /**
