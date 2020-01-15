@@ -28,11 +28,11 @@ public interface MessageHandler {
   /** EndOfExecution */
   default void handleEOE() {}
 
-  /** Table header. */
+  /** Result: table header */
   void handleHeader(List<String> columnNames);
 
   /**
-   * Results
+   * Result: table row
    *
    * <p>TODO(weiguo): shouldn't expose `Any`
    */

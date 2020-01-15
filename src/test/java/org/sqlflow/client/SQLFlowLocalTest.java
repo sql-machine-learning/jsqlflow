@@ -44,7 +44,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
 @RunWith(JUnit4.class)
-public class SQLFlowTest {
+public class SQLFlowLocalTest {
   private SQLFlow client;
   private static final String USER = "314159";
   /**
@@ -149,9 +149,14 @@ public class SQLFlowTest {
   public void testRun() {
     try {
       client.run("SELECT * TO TRAIN DNNClassify WITH ... COLUMN ... INTO ..");
-      client.release();
     } catch (Exception e) {
       assert false;
+    } finally {
+      try {
+        client.release();
+      } catch (InterruptedException e) {
+        System.err.println("exception while releasing SQLFlow client");
+      }
     }
 
     ArgumentCaptor<Request> requestCaptor = ArgumentCaptor.forClass(Request.class);
