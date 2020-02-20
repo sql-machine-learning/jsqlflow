@@ -8,6 +8,7 @@ import org.junit.runners.JUnit4;
 public class HTMLDetectorTest {
   @Test
   public void testIsHTML() {
+    assert HTMLDetector.validate("data:text/html, <div align='center'><img src='data:image/png;base64,iVBORw0KG' /></div>");
     assert HTMLDetector.validate("<html>yes</html>");
     assert HTMLDetector.validate("<image/>");
     assert HTMLDetector.validate("<html>it's a BUG</htlm>");

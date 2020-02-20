@@ -106,7 +106,15 @@ public class SQLFlow {
     while (true) {
       FetchResponse response = blockingStub.fetch(req);
       Logs logs = response.getLogs();
-      logs.getContentList().forEach(this.builder.handler::handleText);
+      logs.getContentList()
+          .forEach(
+              msg -> {
+                if (HTMLDetector.validate(msg)) {
+                  builder.handler.handleHTML(msg);
+                } else {
+                  builder.handler.handleText(msg);
+                }
+              });
       if (response.getEof()) {
         this.builder.handler.handleEOE();
         break;
