@@ -63,12 +63,12 @@ message FetchRequest {
 }
 
 message FetchResponse {
-    message Logs {
-        repeated string content = 1;
+    message Responses {
+        repeated Response response = 1;
     }
     FetchRequest updated_fetch_since = 1;
     bool eof = 2;
-    Logs logs = 3;
+    Responses responses = 4;
 }
 
 message Session {
