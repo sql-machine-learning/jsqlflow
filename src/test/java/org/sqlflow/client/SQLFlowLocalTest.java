@@ -31,7 +31,7 @@ import org.mockito.ArgumentMatchers;
 import proto.SQLFlowGrpc;
 import proto.Sqlflow.FetchRequest;
 import proto.Sqlflow.FetchResponse;
-import proto.Sqlflow.FetchResponse.Logs;
+import proto.Sqlflow.FetchResponse.Responses;
 import proto.Sqlflow.Head;
 import proto.Sqlflow.Job;
 import proto.Sqlflow.Message;
@@ -81,16 +81,32 @@ public class SQLFlowLocalTest {
                   FetchRequest.Builder frb =
                       FetchRequest.newBuilder().setJob(Job.newBuilder().setId(jobId).build());
                   if (StringUtils.isEmpty(req.getStepId())) {
-                    Logs logs =
-                        Logs.newBuilder()
-                            .addContent("fetchLogs for job=[" + jobId + "]")
-                            .addContent("1st line")
-                            .addContent("2nd line")
-                            .addContent("no more logs")
+                    Responses rs =
+                        Responses.newBuilder()
+                            .addResponse(
+                                Response.newBuilder()
+                                    .setMessage(
+                                        Message.newBuilder()
+                                            .setMessage("fetchLogs for job=[" + jobId + "]")
+                                            .build())
+                                    .build())
+                            .addResponse(
+                                Response.newBuilder()
+                                    .setMessage(Message.newBuilder().setMessage("1st line").build())
+                                    .build())
+                            .addResponse(
+                                Response.newBuilder()
+                                    .setMessage(Message.newBuilder().setMessage("2nd line").build())
+                                    .build())
+                            .addResponse(
+                                Response.newBuilder()
+                                    .setMessage(
+                                        Message.newBuilder().setMessage("no more logs").build())
+                                    .build())
                             .build();
                     rsp.onNext(
                         FetchResponse.newBuilder()
-                            .setLogs(logs)
+                            .setResponses(rs)
                             .setUpdatedFetchSince(frb.setStepId("1").build())
                             .build());
                   } else if (req.getStepId().equalsIgnoreCase("1")) {
@@ -100,10 +116,16 @@ public class SQLFlowLocalTest {
                             .setEof(false)
                             .build());
                   } else if (req.getStepId().equalsIgnoreCase("2")) {
-                    Logs bye = Logs.newBuilder().addContent("bye").build();
+                    Responses rs =
+                        Responses.newBuilder()
+                            .addResponse(
+                                Response.newBuilder()
+                                    .setMessage(Message.newBuilder().setMessage("bye").build())
+                                    .build())
+                            .build();
                     rsp.onNext(
                         FetchResponse.newBuilder()
-                            .setLogs(bye)
+                            .setResponses(rs)
                             .setUpdatedFetchSince(frb.setStepId("3").build())
                             .build());
                   } else if (req.getStepId().equalsIgnoreCase("3")) {

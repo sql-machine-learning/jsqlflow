@@ -29,7 +29,6 @@ import org.sqlflow.client.utils.HTMLDetector;
 import proto.SQLFlowGrpc;
 import proto.Sqlflow.FetchRequest;
 import proto.Sqlflow.FetchResponse;
-import proto.Sqlflow.FetchResponse.Logs;
 import proto.Sqlflow.Job;
 import proto.Sqlflow.Request;
 import proto.Sqlflow.Response;
@@ -90,10 +89,8 @@ public class SQLFlow {
         }
       } else if (response.hasEoe()) {
         builder.handler.handleEOE();
-        // assert(!responses.hasNext())
       } else if (response.hasJob()) {
         trackingJobStatus(response.getJob().getId());
-        // assert(!responses.hasNext())
       } else {
         break;
       }
@@ -104,22 +101,30 @@ public class SQLFlow {
     Job job = Job.newBuilder().setId(jobId).build();
     FetchRequest req = FetchRequest.newBuilder().setJob(job).build();
     while (true) {
-      FetchResponse response = blockingStub.fetch(req);
-      Logs logs = response.getLogs();
-      logs.getContentList()
-          .forEach(
-              msg -> {
-                if (HTMLDetector.validate(msg)) {
-                  builder.handler.handleHTML(msg);
-                } else {
-                  builder.handler.handleText(msg);
-                }
-              });
-      if (response.getEof()) {
+      FetchResponse fr = blockingStub.fetch(req);
+      List<Response> responses = fr.getResponses().getResponseList();
+      responses.forEach(
+          msg -> {
+            if (msg.hasHead()) {
+              builder.handler.handleHeader(msg.getHead().getColumnNamesList());
+            } else if (msg.hasRow()) {
+              List<Any> row = msg.getRow().getDataList();
+              builder.handler.handleRow(row);
+            } else if (msg.hasMessage()) {
+              String content = msg.getMessage().getMessage();
+              if (HTMLDetector.validate(content)) {
+                builder.handler.handleHTML(content);
+              } else {
+                builder.handler.handleText(content);
+              }
+            }
+          });
+
+      if (fr.getEof()) {
         this.builder.handler.handleEOE();
         break;
       }
-      req = response.getUpdatedFetchSince();
+      req = fr.getUpdatedFetchSince();
 
       try {
         Thread.sleep(builder.intervalFetching);

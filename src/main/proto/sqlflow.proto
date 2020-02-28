@@ -63,15 +63,11 @@ message FetchRequest {
 }
 
 message FetchResponse {
-    message Logs { //  depreated
-                   repeated string content = 1;
-    }
     message Responses {
         repeated Response response = 1;
     }
     FetchRequest updated_fetch_since = 1;
     bool eof = 2;
-    Logs logs = 3; //  depreated
     Responses responses = 4;
 }
 
@@ -94,7 +90,7 @@ message Session {
 //      2. `USE ...`, `DELETE ...`
 //      3. `SELECT ... TO TRAIN/PREDICT ...`
 message Request {
-    string sql = 1; // The SQL statement to be executed.
+    string sql = 1;		// The SQL statement to be executed.
     Session session = 2;
 }
 
@@ -119,8 +115,7 @@ message Row {
     // that a data value does not exist in the database.
     // We encoded this marker as message Null, and it is one possible type of
     // google.protobuf.Any in the field data
-    message Null {
-    }
+    message Null {}
     repeated google.protobuf.Any data = 1;
 }
 
@@ -130,7 +125,7 @@ message Row {
 // SQL statement like `SELECT ... TO TRAIN/PREDICT ...` returns a stream of
 // messages which indicates the training/predicting progress
 message Message {
-    string message = 1;
+  string message = 1;
 }
 
 // SQLFlow server may execute multiple SQL statements in one RPC call.
