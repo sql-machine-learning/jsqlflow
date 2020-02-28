@@ -117,6 +117,8 @@ public class SQLFlow {
               } else {
                 builder.handler.handleText(content);
               }
+            } else if (msg.hasEoe()) {
+              builder.handler.handleEOE();
             }
           });
 
