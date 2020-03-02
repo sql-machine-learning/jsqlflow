@@ -118,7 +118,12 @@ public class SQLFlow {
                 builder.handler.handleText(content);
               }
             } else if (msg.hasEoe()) {
-              builder.handler.handleEOE();
+              // A SQL program separated into several SQL statements.
+              // A SQL program -> A SQLFlow job
+              // FetchResponse.EOF: end of a SQLFlow Job
+              // Response.EOE: end of a SQL statement.
+              // User doesn't care about if a SQL statement finished, so let's skip the handleEOE
+              // builder.handler.handleEOE();
             }
           });
 
