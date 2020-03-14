@@ -92,7 +92,7 @@
                 <artifactId>protobuf-maven-plugin</artifactId>
                 <version>0.6.1</version>
                 <configuration>
-                    <protoSourceRoot>${project.basedir}/proto/</protoSourceRoot>
+                    <protoSourceRoot>${project.basedir}/sqlflow/pkg/proto/</protoSourceRoot>
                     <protocArtifact>com.google.protobuf:protoc:${protoc.version}:exe:${os.detected.classifier}
                     </protocArtifact>
                     <pluginId>grpc-java</pluginId>
