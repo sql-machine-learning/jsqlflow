@@ -7,7 +7,7 @@
     <groupId>org.sqlflow</groupId>
     <artifactId>jsqlflow</artifactId>
     <packaging>jar</packaging>
-    <version>0.1.9</version>
+    <version>0.2.0</version>
     <name>jsqlflow</name>
     <description>SQLFlow client</description>
     <url>https://github.com/sql-machine-learning/jsqlflow</url>
@@ -92,6 +92,7 @@
                 <artifactId>protobuf-maven-plugin</artifactId>
                 <version>0.6.1</version>
                 <configuration>
+                    <protoSourceRoot>${project.basedir}/sqlflow/pkg/proto/</protoSourceRoot>
                     <protocArtifact>com.google.protobuf:protoc:${protoc.version}:exe:${os.detected.classifier}
                     </protocArtifact>
                     <pluginId>grpc-java</pluginId>
