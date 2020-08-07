@@ -55,7 +55,7 @@ public class SQLFlowRemoteTest {
   }
 
   @Test
-  public void testRun() {
+  public void simpleTest() {
     if (client == null) {
       System.out.println("skip remote test");
       return;
@@ -71,5 +71,22 @@ public class SQLFlowRemoteTest {
         System.err.println("exception while releasing SQLFlow client");
       }
     }
+  }
+
+  public void testRun() {
+    String sqlProgram = System.getProperty("sql");
+    try {
+      client.run(sqlProgram);
+    } catch (Exception e) {
+      assert false;
+    } finally {
+      try {
+        client.release();
+      } catch (InterruptedException e) {
+        System.err.println("exception while releasing SQLFlow client");
+        assert false;
+      }
+    }
+    assert true;
   }
 }
