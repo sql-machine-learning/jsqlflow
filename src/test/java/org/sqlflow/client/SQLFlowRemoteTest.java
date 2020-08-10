@@ -60,18 +60,18 @@ public class SQLFlowRemoteTest {
       System.out.println("skip remote test");
       return;
     }
-    assert runWithGoodResult("SELECT 1");
+    assert runWithGoodResponse("SELECT 1");
   }
 
   @Test
   public void testRun() {
     if (client != null) {
       String sqlProgram = System.getProperty("sql");
-        assert StringUtils.isBlank(sqlProgram) || runWithGoodResult(sqlProgram);
+      assert StringUtils.isBlank(sqlProgram) || runWithGoodResponse(sqlProgram);
     }
   }
 
-  private boolean runWithGoodResult(String sqlProgram) {
+  private boolean runWithGoodResponse(String sqlProgram) {
     boolean res = true;
     try {
       client.run(sqlProgram);
