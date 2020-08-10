@@ -3,6 +3,7 @@
 .idea
 
 # Maven
+dependency-reduced-pom.xml
 log/
 *.log
 target/

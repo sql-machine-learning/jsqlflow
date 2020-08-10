@@ -15,76 +15,27 @@
 
 package org.sqlflow.client;
 
-import io.grpc.ManagedChannel;
-import io.grpc.ManagedChannelBuilder;
-import org.apache.commons.lang3.StringUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
-import proto.Sqlflow.Session;
+import org.sqlflow.client.utils.EnvironmentSpecificSQLFlowClient;
 
 @RunWith(JUnit4.class)
 public class SQLFlowRemoteTest {
   private SQLFlow client;
 
   @Before
-  public void setUp() throws Exception {
-    String serverAddr = System.getenv("SQLFLOW_SERVER");
-    String submitter = System.getenv("SQLFLOW_SUBMITTER");
-    String dataSource = System.getenv("SQLFLOW_DATA_SOURCE");
-    String userId = System.getenv("USER_ID");
-    if (StringUtils.isAnyBlank(serverAddr, submitter, dataSource, userId)) {
-      return;
-    }
-
-    ManagedChannel chan = ManagedChannelBuilder.forTarget(serverAddr).usePlaintext().build();
-    Session session =
-        Session.newBuilder()
-            .setUserId(userId)
-            .setSubmitter(submitter)
-            .setDbConnStr(dataSource)
-            .build();
-    client =
-        SQLFlow.Builder.newInstance()
-            .withSession(session)
-            .withIntervalFetching(2000)
-            .withMessageHandler(new MessageHandlerExample())
-            .withChannel(chan)
-            .build();
+  public void setUp() {
+    client = EnvironmentSpecificSQLFlowClient.getClient(new MessageHandlerExample());
   }
 
   @Test
-  public void simpleTest() {
+  public void runTest() {
     if (client == null) {
       System.out.println("skip remote test");
       return;
     }
-    assert runWithGoodResponse("SELECT 1");
-  }
-
-  @Test
-  public void testRun() {
-    if (client != null) {
-      String sqlProgram = System.getProperty("sql");
-      assert StringUtils.isBlank(sqlProgram) || runWithGoodResponse(sqlProgram);
-    }
-  }
-
-  private boolean runWithGoodResponse(String sqlProgram) {
-    boolean res = true;
-    try {
-      client.run(sqlProgram);
-    } catch (Exception e) {
-      res = false;
-    } finally {
-      try {
-        client.release();
-      } catch (InterruptedException e) {
-        res = false;
-        System.err.println("exception while releasing SQLFlow client");
-      }
-    }
-    return res;
+    assert EnvironmentSpecificSQLFlowClient.hasGoodResponse(client, "SELECT 1");
   }
 }
