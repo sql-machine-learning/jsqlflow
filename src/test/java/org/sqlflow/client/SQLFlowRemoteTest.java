@@ -55,21 +55,36 @@ public class SQLFlowRemoteTest {
   }
 
   @Test
-  public void testRun() {
+  public void simpleTest() {
     if (client == null) {
       System.out.println("skip remote test");
       return;
     }
+    assert runWithGoodResult("SELECT 1");
+  }
+
+  @Test
+  public void testRun() {
+    if (client != null) {
+      String sqlProgram = System.getProperty("sql");
+        assert StringUtils.isBlank(sqlProgram) || runWithGoodResult(sqlProgram);
+    }
+  }
+
+  private boolean runWithGoodResult(String sqlProgram) {
+    boolean res = true;
     try {
-      client.run("SELECT 1");
+      client.run(sqlProgram);
     } catch (Exception e) {
-      assert false;
+      res = false;
     } finally {
       try {
         client.release();
       } catch (InterruptedException e) {
+        res = false;
         System.err.println("exception while releasing SQLFlow client");
       }
     }
+    return res;
   }
 }
