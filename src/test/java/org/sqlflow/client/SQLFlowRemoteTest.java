@@ -15,6 +15,7 @@
 
 package org.sqlflow.client;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -36,6 +37,22 @@ public class SQLFlowRemoteTest {
       System.out.println("skip remote test");
       return;
     }
-    assert EnvironmentSpecificSQLFlowClient.hasGoodResponse(client, "SELECT 2");
+    try {
+      client.run("SELECT 2");
+    } catch (Exception e) {
+      System.err.println("encounter an exception while running SQLFlow");
+      assert false;
+    }
+  }
+
+  @After
+  public void release() {
+    if (client != null) {
+      try {
+        client.release();
+      } catch (InterruptedException e) {
+        System.err.println("encounter an exception while releasing SQLFlow client");
+      }
+    }
   }
 }
