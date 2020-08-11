@@ -40,7 +40,7 @@ public class SQLFlowRemoteTest {
     try {
       client.run("SELECT 2");
     } catch (Exception e) {
-      System.err.println("encounter an exception while running SQLFlow");
+      e.printStackTrace();
       assert false;
     }
   }
@@ -51,7 +51,7 @@ public class SQLFlowRemoteTest {
       try {
         client.release();
       } catch (InterruptedException e) {
-        System.err.println("encounter an exception while releasing SQLFlow client");
+        e.printStackTrace();
       }
     }
   }
