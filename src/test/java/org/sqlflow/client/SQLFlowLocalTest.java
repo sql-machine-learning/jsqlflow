@@ -15,6 +15,10 @@
 
 package org.sqlflow.client;
 
+import static org.mockito.AdditionalAnswers.delegatesTo;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+
 import io.grpc.ManagedChannel;
 import io.grpc.inprocess.InProcessChannelBuilder;
 import io.grpc.inprocess.InProcessServerBuilder;
@@ -38,10 +42,6 @@ import proto.Sqlflow.Message;
 import proto.Sqlflow.Request;
 import proto.Sqlflow.Response;
 import proto.Sqlflow.Session;
-
-import static org.mockito.AdditionalAnswers.delegatesTo;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
 
 @RunWith(JUnit4.class)
 public class SQLFlowLocalTest {
@@ -170,14 +170,14 @@ public class SQLFlowLocalTest {
   @Test
   public void testRun() {
     try {
-      client.run("SELECT * TO TRAIN DNNClassify WITH ... COLUMN ... INTO ..");
+      client.run("SELECT * TO TRAIN DNNClassifier WITH ... COLUMN ... INTO ..");
     } catch (Exception e) {
       assert false;
     } finally {
       try {
         client.release();
       } catch (InterruptedException e) {
-        System.err.println("exception while releasing SQLFlow client");
+        System.err.println("encounter an exception while releasing SQLFlow client");
       }
     }
 

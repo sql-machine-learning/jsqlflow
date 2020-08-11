@@ -36,6 +36,6 @@ public class SQLFlowRemoteTest {
       System.out.println("skip remote test");
       return;
     }
-    assert EnvironmentSpecificSQLFlowClient.hasGoodResponse(client, "SELECT 1");
+    assert EnvironmentSpecificSQLFlowClient.hasGoodResponse(client, "SELECT 2");
   }
 }
