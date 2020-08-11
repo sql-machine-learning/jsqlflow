@@ -31,21 +31,4 @@ public class EnvironmentSpecificSQLFlowClient {
         .withChannel(chan)
         .build();
   }
-
-  public static boolean hasGoodResponse(SQLFlow client, String sqlProgram) {
-    boolean res = true;
-    try {
-      client.run(sqlProgram);
-    } catch (Exception e) {
-      res = false;
-    } finally {
-      try {
-        client.release();
-      } catch (InterruptedException e) {
-        res = false;
-        System.err.println("encounter an exception while releasing SQLFlow client");
-      }
-    }
-    return res;
-  }
 }
