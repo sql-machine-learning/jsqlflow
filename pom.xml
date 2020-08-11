@@ -196,7 +196,7 @@
                             <addClasspath>false</addClasspath>
                         </manifest>
                     </archive>
-                    <finalName>${pom.name}-${pom.version}-test-all-deps</finalName>
+                    <finalName>${pom.name}-${pom.version}-tests-all-deps</finalName>
                     <appendAssemblyId>false</appendAssemblyId>
                 </configuration>
                 <executions>
