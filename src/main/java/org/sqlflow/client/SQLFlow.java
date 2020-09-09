@@ -15,15 +15,14 @@
 
 package org.sqlflow.client;
 
-import java.util.Iterator;
-import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.concurrent.TimeUnit;
-
 import com.google.protobuf.Any;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.StatusRuntimeException;
+import java.util.Iterator;
+import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.concurrent.TimeUnit;
 import org.apache.commons.lang3.StringUtils;
 import org.sqlflow.client.utils.HTMLDetector;
 import proto.SQLFlowGrpc;
@@ -101,6 +100,15 @@ public class SQLFlow {
     Job job = Job.newBuilder().setId(jobId).build();
     FetchRequest req = FetchRequest.newBuilder().setJob(job).build();
     while (true) {
+      // move sleep to top, sleep a while for each message
+      // especially for the first one in case the info is not
+      // updated in k8s
+      try {
+        Thread.sleep(builder.intervalFetching);
+      } catch (InterruptedException e) {
+        break;
+      }
+
       FetchResponse fr = blockingStub.fetch(req);
       List<Response> responses = fr.getResponses().getResponseList();
       responses.forEach(
@@ -132,12 +140,6 @@ public class SQLFlow {
         break;
       }
       req = fr.getUpdatedFetchSince();
-
-      try {
-        Thread.sleep(builder.intervalFetching);
-      } catch (InterruptedException e) {
-        break;
-      }
     }
   }
 
