@@ -71,7 +71,7 @@ public class SQLFlowLocalTest {
                       Head.newBuilder().addColumnNames("name").addColumnNames("salary").build();
                   rsp.onNext(Response.newBuilder().setHead(header).build());
 
-                  Job job = Job.newBuilder().setId(mockJobId(userId, req.getSql())).build();
+                  Job job = Job.newBuilder().setId(mockJobId(userId, req.getStmts())).build();
                   rsp.onNext(Response.newBuilder().setJob(job).build());
                   rsp.onCompleted();
                 }
