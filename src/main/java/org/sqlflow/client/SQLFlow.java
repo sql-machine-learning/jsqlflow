@@ -51,7 +51,7 @@ public class SQLFlow {
       throw new IllegalArgumentException("sql is empty");
     }
 
-    Request req = Request.newBuilder().setSession(builder.session).setSql(sql).build();
+    Request req = Request.newBuilder().setSession(builder.session).setStmts(sql).build();
     try {
       Iterator<Response> responses = blockingStub.run(req);
       handleSQLFlowResponses(responses);
